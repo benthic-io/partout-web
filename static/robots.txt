@@ -1,0 +1,6 @@
+User-agent: *
+# Marketing pages are crawlable. /app and /admin are application surfaces:
+# never indexed, never access control (the edge must also send X-Robots-Tag:
+# noindex for /app and /admin* — po-security handoff cee9848a, P2/P3/P4).
+Disallow: /app/
+Disallow: /admin
