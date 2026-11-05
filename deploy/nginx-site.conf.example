@@ -14,25 +14,14 @@
 # add a new location that does add_header, include the snippets there too —
 # deploy_check.sh asserts the matrix per path to catch drift.
 #
-# Install these two snippet files and include them as shown:
-
-# ── /etc/nginx/snippets/partout-common-security.conf ──────────────────────
-#   add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-#   add_header X-Content-Type-Options "nosniff" always;
-#   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-#   add_header X-Frame-Options "DENY" always;
-#   add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-#
-# ── /etc/nginx/snippets/partout-app-security.conf ─────────────────────────
-#   # app-surface extras; pairs with the common snippet (include both together)
-#   add_header X-Robots-Tag "noindex, nofollow" always;
-#   add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
-#   # P3 ships REPORT-ONLY; swap to Content-Security-Policy after sign-in +
-#   # CanvasKit pass, keeping worker-src and frame-ancestors:
-#   add_header Content-Security-Policy-Report-Only "default-src 'self' 'wasm-unsafe-eval'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: https://accounts.google.com; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
-#   # The enforced variant (post-P3 trial) is the identical string on a
-#   # Content-Security-Policy header — deploy_check CSP_MODE=enforce asserts it.
-#   # NO Cross-Origin-Embedder-Policy until Google sign-in + CanvasKit verified.
+# Install step (po-boss, after operator approval): copy the two REAL snippet
+# files from this repo to the droplet and deploy the server block:
+#   install -m 644 deploy/snippets/partout-common-security.conf \
+#                  deploy/snippets/partout-app-security.conf /etc/nginx/snippets/
+#   nginx -t && systemctl reload nginx
+# scripts/check_deploy_template.py (run by CI) verifies every include here
+# resolves under deploy/snippets/ and every add_header block includes the
+# common matrix; a copy of it also runs `nginx -t` against this file.
 
 server {
   listen 443 ssl;
@@ -86,17 +75,23 @@ server {
   }
 
   # --- legacy admin: proxied to the backend until P4 parity sign-off -------
-  # noindex + no-store from day one (po-security cf0d322b MED-2):
+  # noindex + no-store from day one (cf0d322b MED-2). 55b115bd MED-2: the
+  # legacy admin.html/login.html use inline script/style and onclick
+  # handlers, so they get a tailored CSP with 'unsafe-inline' — a CSP-less
+  # high-value console is not acceptable; the strict no-inline policy
+  # arrives with the P4 Flutter console (frame-ancestors/object-src hold now).
   location = /admin {
     include snippets/partout-common-security.conf;
     add_header X-Robots-Tag "noindex, nofollow" always;
     add_header Cache-Control "no-store" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
     proxy_pass http://127.0.0.1:8000;
   }
   location = /admin/ {
     include snippets/partout-common-security.conf;
     add_header X-Robots-Tag "noindex, nofollow" always;
     add_header Cache-Control "no-store" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
     return 308 /admin;
   }
 
@@ -110,7 +105,7 @@ server {
 
     location = /robots.txt {
       include snippets/partout-common-security.conf;
-      add_header Content-Security-Policy "default-src 'self'" always;
+      add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
     }
     location ~* \.(css|js|png|jpg|jpeg|svg|woff2?)$ {
       include snippets/partout-common-security.conf;

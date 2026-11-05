@@ -104,9 +104,11 @@ if [[ $site_live == 1 ]]; then
   hdr /css/style.css Strict-Transport-Security 'max-age=[0-9]{5,}'
   hdr /css/style.css Cross-Origin-Resource-Policy 'same-origin'
 
-  # Legacy admin: noindex + no-store while proxied, redirect-safe (cf0d322b MED-2):
+  # Legacy admin: noindex + no-store while proxied, redirect-safe (cf0d322b MED-2);
+  # tailored legacy CSP with unsafe-inline, object-src 'none' (55b115bd MED-2):
   hdr /admin X-Robots-Tag 'noindex'
   hdr /admin Cache-Control 'no-store'
+  hdr /admin Content-Security-Policy "default-src 'self'.*script-src 'self' 'unsafe-inline'.*object-src 'none'.*frame-ancestors 'none'"
   hdr /admin/ X-Robots-Tag 'noindex'
 
   # sitemap must not advertise app/admin surfaces
@@ -125,10 +127,13 @@ if [[ $site_live == 1 ]]; then
     hdr /app/ Cross-Origin-Opener-Policy 'same-origin-allow-popups'
     hdr /app/ X-Frame-Options 'DENY'
     if [[ $CSP_MODE == report-only ]]; then
-      hdr /app/ Content-Security-Policy-Report-Only "default-src 'self'.*wasm-unsafe-eval.*worker-src"
+      hdr /app/ Content-Security-Policy-Report-Only "default-src 'self'.*wasm-unsafe-eval.*worker-src.*object-src 'none'"
     else
-      hdr /app/ Content-Security-Policy "default-src 'self'.*wasm-unsafe-eval.*worker-src.*frame-ancestors 'none'"
+      hdr /app/ Content-Security-Policy "default-src 'self'.*wasm-unsafe-eval.*worker-src.*object-src 'none'.*frame-ancestors 'none'"
     fi
+    # parity with site scope (55b115bd LOW-4):
+    hdr /app/ X-Content-Type-Options 'nosniff'
+    hdr /app/ Referrer-Policy 'strict-origin-when-cross-origin'
     # entry documents must be no-store; versioned tier immutable (cf0d322b 3d):
     hdr /app/index.html Cache-Control 'no-store'
     hdr /app/flutter_bootstrap.js Cache-Control 'no-store'

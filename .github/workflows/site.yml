@@ -86,3 +86,13 @@ jobs:
         run: |
           ! grep -rIE 'client_secret|BEGIN [A-Z ]*PRIVATE KEY|JWT_SECRET\s*[:=]\s*[A-Za-z0-9]' \
             --exclude-dir=.git --exclude-dir=public .
+
+      # Deployment config is linted and syntax-tested here so P2 apply starts
+      # from a template nginx -t already accepts (po-security 55b115bd-1).
+      - name: Deploy template lint (snippets resolve, inheritance-safe, CSP rules)
+        run: python scripts/check_deploy_template.py
+
+      - name: nginx -t against the template
+        run: |
+          command -v nginx >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q nginx; }
+          python scripts/test_nginx_conf.py
