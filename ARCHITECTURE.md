@@ -57,19 +57,28 @@ to frps as today. Option B fallback: backend `StaticFiles` catch-all mounted
 after API routes. No nginx/frp change happens without explicit operator
 approval.
 
-Header mechanics (cf0d322b HIGH, fixed in `deploy/nginx-site.conf.example`):
-nginx `add_header` does **not** inherit into any location that declares its
-own — a single nested `add_header` silently drops the whole server-level
-matrix. The template therefore installs two snippet files
-(`partout-common-security.conf`: HSTS, nosniff, Referrer-Policy, XFO DENY,
-Permissions-Policy; `partout-app-security.conf`: noindex, COOP, app CSP) and
-**every** header-adding block includes them explicitly. `/app` gained XFO +
-`frame-ancestors 'none'` + `worker-src 'self' blob:`; `/admin` (and the
-`/admin/` redirect) send noindex + no-store; `location = /app` 308s to
-`/app/`; no `= /app/` exact-match block exists (it would shadow the prefix
-block and lose its `alias`).
+Header mechanics (cf0d322b HIGH + 55b115bd HIGH-1, fixed in
+`deploy/nginx-site.conf.example`): nginx `add_header` does **not** inherit
+into any location that declares its own — a single nested `add_header`
+silently drops the whole server-level matrix. The two matrices ship as REAL
+files, `deploy/snippets/partout-common-security.conf` (HSTS, nosniff,
+Referrer-Policy, XFO DENY, Permissions-Policy) and
+`deploy/snippets/partout-app-security.conf` (noindex, COOP, app CSP report-
+only with `frame-ancestors 'none'`, `worker-src 'self' blob:`,
+`object-src 'none'`), and **every** header-adding block includes them
+explicitly; the install step copies them to `/etc/nginx/snippets/`.
+`scripts/check_deploy_template.py` (CI) fails the build if any include stops
+resolving, any `add_header` block omits the common snippet, any /app header
+block omits the app snippet, or any CSP string lacks `object-src 'none'`;
+`scripts/test_nginx_conf.py` (CI) runs `nginx -t` against the template with
+the real snippets, so P2 apply starts from an accepted config. `/admin`
+(and the `/admin/` redirect) additionally send `X-Robots-Tag noindex,nofollow`,
+`no-store`, and a tailored legacy CSP (`'unsafe-inline'` for scripts/styles —
+required by admin.html until P4 retirement; frame-ancestors/object-src hold).
+`location = /app` 308s to `/app/`; no `= /app/` exact-match block exists (it
+would shadow the prefix block and lose its `alias`).
 
-## Security contract (po-security handoffs `cee9848a` + `cf0d322b`, binding per phase)
+## Security contract (po-security handoffs `cee9848a` + `cf0d322b` + `55b115bd`, binding per phase)
 
 P1 (this repo, landed):
 
