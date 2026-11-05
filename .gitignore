@@ -4,3 +4,6 @@ resources/_gen/
 *.swp
 
 .hugo_build.lock
+
+__pycache__/
+*.pyc
