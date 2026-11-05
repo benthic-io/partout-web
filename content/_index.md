@@ -20,9 +20,10 @@ build on.
   candidate parts for its exact configuration.
 - **You swipe what you see**: right for *present and resaleable*, left for
   *absent or not resaleable*. Thirty seconds, no expertise required.
-- **Nothing publishes on one voice.** A fact goes public when independent
-  people agree on it — two distinct owners is the floor, and the system labels
-  how it got there.
+- **Nothing publishes on one voice.** Facts come from independent agreement:
+  the human majority is decisive, labelled agent fallbacks only fill gaps —
+  they never override people — and every route to publication says how it
+  got there.
 
 ## Why it exists
 
