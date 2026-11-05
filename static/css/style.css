@@ -1,0 +1,240 @@
+/* PartOut site styles.
+   Colors come exclusively from brand.css (generated from the app theme).
+   This file must not hardcode hex values — the brand is defined once. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: var(--dark-background);
+  --bg-deep: var(--dark-surface-lowest);
+  --surface: var(--dark-surface);
+  --surface-raised: var(--dark-surface-container);
+  --line: var(--dark-outline-variant);
+  --text: var(--dark-on-surface);
+  --muted: var(--dark-on-surface-variant);
+  --accent: var(--lime);
+  --accent-ink: var(--dark-on-primary);
+  --gold: var(--dark-tertiary);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial,
+    sans-serif;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+a:hover,
+a:focus-visible {
+  opacity: 0.8;
+}
+
+.container {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* Header */
+.site-header {
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.brand img {
+  height: 52px;
+  width: auto;
+}
+
+.site-nav ul {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.site-nav a {
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.site-nav a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* Main */
+main.container {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+  min-height: 60vh;
+}
+
+.page h1 {
+  font-size: 2.4rem;
+  line-height: 1.15;
+  margin-bottom: 1.2rem;
+  color: var(--text);
+}
+
+.page h2 {
+  font-size: 1.55rem;
+  margin: 2.4rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--line);
+  color: var(--accent);
+}
+
+.page h3 {
+  font-size: 1.2rem;
+  margin: 1.6rem 0 0.6rem;
+}
+
+.page p,
+.page ul,
+.page ol {
+  margin-bottom: 1rem;
+  max-width: 46rem;
+}
+
+.page ul,
+.page ol {
+  padding-left: 1.5rem;
+}
+
+.page li {
+  margin-bottom: 0.35rem;
+}
+
+/* Landing definitions: first two bold-led paragraphs read as the hero */
+.page p strong {
+  color: var(--accent);
+}
+
+/* Tables (status board) */
+table {
+  border-collapse: collapse;
+  margin: 1rem 0 1.5rem;
+  width: 100%;
+  max-width: 46rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 700;
+}
+
+tr:nth-child(even) td {
+  background: var(--surface);
+}
+
+/* Inline code / pre */
+code {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+  font-size: 0.92em;
+  color: var(--gold);
+}
+
+pre {
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1.2rem;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text);
+}
+
+blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.4rem 1rem;
+  margin: 0 0 1rem;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.not-found {
+  padding: 4rem 0;
+}
+
+.not-found h1 {
+  color: var(--accent);
+}
+
+/* Footer */
+.site-footer {
+  background: var(--bg-deep);
+  border-top: 1px solid var(--line);
+  padding: 1.6rem 0 2rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.site-footer p {
+  margin-bottom: 0.4rem;
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .header-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .site-nav ul {
+    gap: 1.1rem;
+  }
+
+  .page h1 {
+    font-size: 1.9rem;
+  }
+}
