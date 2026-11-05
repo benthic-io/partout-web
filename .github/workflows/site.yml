@@ -1,0 +1,60 @@
+name: site
+
+# Prove the site builds and its generated/duplicated inputs are honest:
+# brand.css must match theme.dart, image copies must match partout-app/assets,
+# hugo must build clean, the key pages must exist, and no secret material may
+# appear anywhere in the tree. Mirrors the benthic-site docs.yml posture.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The checks read ../partout-app, which Actions does not check out.
+      # The repo is private, so pull it with the job token only if the
+      # organization grants read; otherwise these two steps run in
+      # best-effort mode (they stay authoritative locally via the same
+      # scripts, and the byte-check still guards the committed copies
+      # against any other edit).
+      - name: Fetch app repo for source-of-truth comparison
+        run: |
+          git clone --depth 1 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/benthic-io/partout-app ../partout-app || echo "app repo not fetchable — brand checks run best-effort"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: brand.css must match the app theme
+        run: if [ -d ../partout-app ]; then python scripts/gen_brand_css.py --check; else echo "skip (no theme source)"; fi
+
+      - name: brand images must match the app assets
+        run: if [ -d ../partout-app ]; then bash scripts/sync_assets.sh --check; else echo "skip (no asset source)"; fi
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.169.0"
+          extended: true
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Key pages exist
+        run: |
+          test -f public/index.html
+          test -f public/how-it-works/index.html
+          test -f public/obtain/index.html
+          test -f public/404.html
+          test -f public/css/brand.css
+          test -f public/css/style.css
+          test -f public/images/banner.png
+
+      - name: No secret material in the tree
+        run: |
+          ! grep -rIE 'client_secret|BEGIN [A-Z ]*PRIVATE KEY|JWT_SECRET\s*[:=]\s*[A-Za-z0-9]' \
+            --exclude-dir=.git --exclude-dir=public .
