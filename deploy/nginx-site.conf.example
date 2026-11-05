@@ -1,10 +1,38 @@
-# partout.pro — Option A static-site server block (TEMPLATE for po-boss).
+# partout.pro — Option A static-site server config (TEMPLATE for po-boss).
 # This file is documentation, not live config: production nginx is only
 # changed by po-boss after explicit operator approval of the routing plan.
-# Security header matrix per po-security handoff cee9848a.
+# Security header matrix per po-security handoffs cee9848a + cf0d322b.
 #
-# Assumptions: hugo build (public/) at /srv/partout/site/, flutter web build
+# ASSUMPTIONS: hugo build (public/) at /srv/partout/site/, flutter web build
 # at /srv/partout/app/, existing API proxy to frps :8000 preserved verbatim.
+#
+# ── THE INHERITANCE TRAP (po-security cf0d322b HIGH) ──────────────────────
+# nginx add_header is level-scoped: a location that declares ANY add_header
+# silently drops every header inherited from above. Every block below that
+# adds a header therefore includes a snippet that re-declares the FULL common
+# matrix at its own level, then appends its surface-specific headers. If you
+# add a new location that does add_header, include the snippets there too —
+# deploy_check.sh asserts the matrix per path to catch drift.
+#
+# Install these two snippet files and include them as shown:
+
+# ── /etc/nginx/snippets/partout-common-security.conf ──────────────────────
+#   add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+#   add_header X-Content-Type-Options "nosniff" always;
+#   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+#   add_header X-Frame-Options "DENY" always;
+#   add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+#
+# ── /etc/nginx/snippets/partout-app-security.conf ─────────────────────────
+#   # app-surface extras; pairs with the common snippet (include both together)
+#   add_header X-Robots-Tag "noindex, nofollow" always;
+#   add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
+#   # P3 ships REPORT-ONLY; swap to Content-Security-Policy after sign-in +
+#   # CanvasKit pass, keeping worker-src and frame-ancestors:
+#   add_header Content-Security-Policy-Report-Only "default-src 'self' 'wasm-unsafe-eval'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: https://accounts.google.com; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+#   # The enforced variant (post-P3 trial) is the identical string on a
+#   # Content-Security-Policy header — deploy_check CSP_MODE=enforce asserts it.
+#   # NO Cross-Origin-Embedder-Policy until Google sign-in + CanvasKit verified.
 
 server {
   listen 443 ssl;
@@ -12,52 +40,83 @@ server {
   server_name partout.pro;
   # ssl_certificate ... (keep existing droplet cert config)
 
-  # --- shared security headers -------------------------------------------
-  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-  add_header X-Content-Type-Options "nosniff" always;
-  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-  add_header X-Frame-Options "DENY" always;
-  add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-  # Marketing site: same-origin everything, no inline (CI-enforced), no
-  # third-party scripts. If images/OG ever move off-origin, widen explicitly.
-  add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+  # Baseline for locations that add nothing (e.g. the API proxy, which sets
+  # no add_header and therefore inherits this whole set):
+  include snippets/partout-common-security.conf;
+  add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
 
-  # --- API paths first: site must never shadow them (SPEC 16.1) -----------
-  location /api/    { proxy_pass http://127.0.0.1:8000; }   # existing frps proxy settings
-  location /health  { proxy_pass http://127.0.0.1:8000; }
+  # --- API paths first: the site must never shadow them (SPEC 16.1) --------
+  location /api/     { proxy_pass http://127.0.0.1:8000; }  # existing frps proxy settings
+  location /health   { proxy_pass http://127.0.0.1:8000; }
   location /uploads/ { proxy_pass http://127.0.0.1:8000; }
 
-  # --- Flutter web (P3) ----------------------------------------------------
+  # --- Flutter web (P3) ------------------------------------------------------
+  # note: NO "location = /app/" block — exact match would shadow the prefix
+  # block below and lose its alias; the prefix block handles the directory.
+  location = /app      { include snippets/partout-common-security.conf; return 308 /app/; }
   location /app/ {
     alias /srv/partout/app/;
-    add_header Cache-Control "no-store" always;        # re-add inherited headers!
-    add_header X-Robots-Tag "noindex, nofollow" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-    # Roll out report-only first (po-security P3.5): swap to
-    # Content-Security-Policy once sign-in + CanvasKit pass under it.
-    add_header Content-Security-Policy-Report-Only "default-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; frame-src https://accounts.google.com; connect-src 'self' https://accounts.google.com; img-src 'self' data: https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; base-uri 'self'; form-action 'self'" always;
-    add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
-    # NO Cross-Origin-Embedder-Policy until sign-in + CanvasKit verified.
-    # hashed build assets get immutable caching one level down:
-    location ~* \.(js|wasm|png|jpg|svg|woff2?)$ {
+    # full matrix re-declared at this level (inheritance trap):
+    include snippets/partout-common-security.conf;
+    include snippets/partout-app-security.conf;
+    add_header Cache-Control "no-store" always;   # documents + unversioned files
+
+    # index + bootstrap must never cache (the service worker version query
+    # lives INSIDE flutter_bootstrap.js — it is the invalidation point):
+    location ~* ^/app/(index\.html|flutter_bootstrap\.js)$ {
+      include snippets/partout-common-security.conf;
+      include snippets/partout-app-security.conf;
+      add_header Cache-Control "no-store" always;
+    }
+    # long cache for the versioned entry script (flutter pins it by query):
+    location = /app/main.dart.js {
+      include snippets/partout-common-security.conf;
+      include snippets/partout-app-security.conf;
+      add_header Cache-Control "public, max-age=604800" always;
+      add_header Cross-Origin-Resource-Policy "same-origin" always;
+    }
+    # immutable ONLY for content-versioned paths (canvaskit dir carries the
+    # engine version; fonts/icons are build-stable):
+    location ~* ^/app/(canvaskit/|assets/fonts/|icons/) {
+      include snippets/partout-common-security.conf;
+      include snippets/partout-app-security.conf;
       add_header Cache-Control "public, max-age=31536000, immutable" always;
-      add_header X-Content-Type-Options "nosniff" always;
+      add_header Cross-Origin-Resource-Policy "same-origin" always;
     }
   }
 
-  # legacy admin (until P4 parity sign-off, then replace with redirect):
-  location = /admin { proxy_pass http://127.0.0.1:8000; }          # admin.html today
-  location = /admin/ { return 308 /admin; }
+  # --- legacy admin: proxied to the backend until P4 parity sign-off -------
+  # noindex + no-store from day one (po-security cf0d322b MED-2):
+  location = /admin {
+    include snippets/partout-common-security.conf;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header Cache-Control "no-store" always;
+    proxy_pass http://127.0.0.1:8000;
+  }
+  location = /admin/ {
+    include snippets/partout-common-security.conf;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header Cache-Control "no-store" always;
+    return 308 /admin;
+  }
 
-  # --- Hugo site -----------------------------------------------------------
+  # --- Hugo site ------------------------------------------------------------
   location / {
     root /srv/partout/site;
     try_files $uri $uri/ $uri/index.html =404;
     error_page 404 /404.html;    # branded 404 shipped by hugo
-    location = /robots.txt { add_header X-Content-Type-Options "nosniff" always; }
+    include snippets/partout-common-security.conf;
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+
+    location = /robots.txt {
+      include snippets/partout-common-security.conf;
+      add_header Content-Security-Policy "default-src 'self'" always;
+    }
+    location ~* \.(css|js|png|jpg|jpeg|svg|woff2?)$ {
+      include snippets/partout-common-security.conf;
+      add_header Cache-Control "public, max-age=3600" always;
+      add_header Cross-Origin-Resource-Policy "same-origin" always;
+    }
   }
 }
 
