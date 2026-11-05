@@ -16,6 +16,9 @@ on:
     branches: [master, main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   site:
     runs-on: ubuntu-latest
@@ -72,11 +75,12 @@ jobs:
           grep -q 'Disallow: /admin' public/robots.txt
 
       # Strict CSP stays achievable only while the site ships no inline
-      # script/style/handlers (po-security handoff cee9848a P1 item 4).
+      # script/style/handlers (po-security handoffs cee9848a P1-4, cf0d322b
+      # LOW-4: case-insensitive, both quote styles).
       - name: No inline scripts or styles (strict-CSP readiness)
         run: |
-          ! grep -REq '<script|javascript:| style="| onclick=| onload=' \
-            --include='*.html' public
+          ! grep -REiq --include='*.html' -- "<script|javascript:|[[:space:]]on[a-z]+=[\"']|[[:space:]]style=[\"']" \
+            public
 
       - name: No secret material in the tree
         run: |

@@ -57,7 +57,19 @@ to frps as today. Option B fallback: backend `StaticFiles` catch-all mounted
 after API routes. No nginx/frp change happens without explicit operator
 approval.
 
-## Security contract (po-security handoff `cee9848a`, binding per phase)
+Header mechanics (cf0d322b HIGH, fixed in `deploy/nginx-site.conf.example`):
+nginx `add_header` does **not** inherit into any location that declares its
+own — a single nested `add_header` silently drops the whole server-level
+matrix. The template therefore installs two snippet files
+(`partout-common-security.conf`: HSTS, nosniff, Referrer-Policy, XFO DENY,
+Permissions-Policy; `partout-app-security.conf`: noindex, COOP, app CSP) and
+**every** header-adding block includes them explicitly. `/app` gained XFO +
+`frame-ancestors 'none'` + `worker-src 'self' blob:`; `/admin` (and the
+`/admin/` redirect) send noindex + no-store; `location = /app` 308s to
+`/app/`; no `= /app/` exact-match block exists (it would shadow the prefix
+block and lose its `alias`).
+
+## Security contract (po-security handoffs `cee9848a` + `cf0d322b`, binding per phase)
 
 P1 (this repo, landed):
 
@@ -65,13 +77,23 @@ P1 (this repo, landed):
   crawlable. robots is **not** access control — the edge also sends
   `X-Robots-Tag: noindex` on `/app` and `/admin*` (P2/P3, po-boss nginx) and
   those paths never appear in the sitemap.
-- All GitHub Actions pinned by commit SHA; hugo pinned 0.169.0 extended.
+- All GitHub Actions pinned by commit SHA; workflow permissions reduced to
+  `contents: read`; hugo pinned 0.169.0 extended.
 - No inline `style`/`script`/event-handlers anywhere in the built site — CI
-  asserts it so a strict CSP at the edge stays possible.
-- `deploy_check.sh` asserts the edge header matrix once deployed (HSTS, CSP,
-  nosniff, Referrer-Policy, X-Frame-Options DENY, Permissions-Policy,
-  `no-store` on app/admin HTML, immutable on hashed assets); headers are set
-  at droplet nginx by po-boss — before P2 the checks report SKIP.
+  asserts it case-insensitively for both quote styles so a strict CSP
+  (`object-src 'none'`, `frame-ancestors 'none'`) at the edge stays possible;
+  `Cross-Origin-Resource-Policy: same-origin` on static assets.
+- `deploy_check.sh` asserts the edge header matrix **per path, per nested
+  location** (cf0d322b): HSTS, CSP, nosniff, Referrer-Policy, X-Frame-Options
+  DENY, **all three** Permissions-Policy directives, `/robots.txt` and
+  `/css/style.css` keep the matrix despite `add_header` nesting, `/admin`
+  carries noindex + no-store, sitemap cleanliness; `CHECK_APP=1` adds the
+  `/app` surface with `CSP_MODE=report-only|enforce` (P3 starts report-only),
+  `no-store` on index/`flutter_bootstrap.js`, and immutable only on the
+  content-versioned tier (`APP_IMMUTABLE_PATH`, e.g. `canvaskit/`); site
+  checks gate on the **Hugo generator marker** or `SITE_DEPLOYED=1|0`, never
+  on marketing words. Headers are applied at droplet nginx by po-boss —
+  before P2 the checks report SKIP.
 - No analytics, no cookies, nothing third-party in the site.
 
 P3 (Flutter web — binding decisions recorded for po-app/po-backend):
