@@ -57,6 +57,54 @@ to frps as today. Option B fallback: backend `StaticFiles` catch-all mounted
 after API routes. No nginx/frp change happens without explicit operator
 approval.
 
+## Security contract (po-security handoff `cee9848a`, binding per phase)
+
+P1 (this repo, landed):
+
+- `static/robots.txt` disallows `/app/` and `/admin`; marketing stays
+  crawlable. robots is **not** access control — the edge also sends
+  `X-Robots-Tag: noindex` on `/app` and `/admin*` (P2/P3, po-boss nginx) and
+  those paths never appear in the sitemap.
+- All GitHub Actions pinned by commit SHA; hugo pinned 0.169.0 extended.
+- No inline `style`/`script`/event-handlers anywhere in the built site — CI
+  asserts it so a strict CSP at the edge stays possible.
+- `deploy_check.sh` asserts the edge header matrix once deployed (HSTS, CSP,
+  nosniff, Referrer-Policy, X-Frame-Options DENY, Permissions-Policy,
+  `no-store` on app/admin HTML, immutable on hashed assets); headers are set
+  at droplet nginx by po-boss — before P2 the checks report SKIP.
+- No analytics, no cookies, nothing third-party in the site.
+
+P3 (Flutter web — binding decisions recorded for po-app/po-backend):
+
+- **Memory-only tokens.** No `localStorage`/`sessionStorage`/
+  `flutter_secure_storage` on web (its web backend is browser storage and
+  XSS-readable). Reload means re-login. Persistence later requires HttpOnly
+  + Secure + SameSite cookies with CSRF in the backend — not a Dart flag.
+- Logout clears both in-memory tokens and stale storage keys from any earlier
+  build; hard-reload and back-button return must land on the login screen.
+- Release build without source maps; service worker scoped to `/app/` and
+  never caching `/api` or auth responses.
+- OAuth client id stays public, client secret never; consent screen remains
+  `Testing` with named test users until legal pages + Google verification.
+- CSP for `/app`: `'self'` + `wasm-unsafe-eval` + Google Identity origins
+  only, rolled out as `Content-Security-Policy-Report-Only` first; COOP
+  `same-origin-allow-popups`; no COEP until sign-in + CanvasKit pass.
+
+P4 (admin console):
+
+- Client-side `is_admin` is UX only; the backend gate is the boundary — no
+  client-trusted role, ever.
+- Backend prerequisites (po-backend): last-admin guard (409 on final
+  demote/delete), append-only audit row for grant/revoke/delete/refresh-vin,
+  re-auth before destructive actions, typed confirmations, no self-delete.
+- Console posture: 15-minute idle timeout, no remember-me, no tokens in
+  URLs/logs/DOM attributes, no third-party scripts.
+- Legacy `/admin`/`admin.html` retired (redirect or 301 with `no-store`)
+  only after parity sign-off.
+
+P5 (catalog): no listing data, seller identity, VIN, or raw corpus; public
+labels/license gate from the spec.
+
 ## Build & deploy
 
 ```bash
