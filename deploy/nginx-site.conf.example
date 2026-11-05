@@ -1,0 +1,68 @@
+# partout.pro — Option A static-site server block (TEMPLATE for po-boss).
+# This file is documentation, not live config: production nginx is only
+# changed by po-boss after explicit operator approval of the routing plan.
+# Security header matrix per po-security handoff cee9848a.
+#
+# Assumptions: hugo build (public/) at /srv/partout/site/, flutter web build
+# at /srv/partout/app/, existing API proxy to frps :8000 preserved verbatim.
+
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name partout.pro;
+  # ssl_certificate ... (keep existing droplet cert config)
+
+  # --- shared security headers -------------------------------------------
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+  add_header X-Frame-Options "DENY" always;
+  add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+  # Marketing site: same-origin everything, no inline (CI-enforced), no
+  # third-party scripts. If images/OG ever move off-origin, widen explicitly.
+  add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+
+  # --- API paths first: site must never shadow them (SPEC 16.1) -----------
+  location /api/    { proxy_pass http://127.0.0.1:8000; }   # existing frps proxy settings
+  location /health  { proxy_pass http://127.0.0.1:8000; }
+  location /uploads/ { proxy_pass http://127.0.0.1:8000; }
+
+  # --- Flutter web (P3) ----------------------------------------------------
+  location /app/ {
+    alias /srv/partout/app/;
+    add_header Cache-Control "no-store" always;        # re-add inherited headers!
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    # Roll out report-only first (po-security P3.5): swap to
+    # Content-Security-Policy once sign-in + CanvasKit pass under it.
+    add_header Content-Security-Policy-Report-Only "default-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; frame-src https://accounts.google.com; connect-src 'self' https://accounts.google.com; img-src 'self' data: https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; base-uri 'self'; form-action 'self'" always;
+    add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
+    # NO Cross-Origin-Embedder-Policy until sign-in + CanvasKit verified.
+    # hashed build assets get immutable caching one level down:
+    location ~* \.(js|wasm|png|jpg|svg|woff2?)$ {
+      add_header Cache-Control "public, max-age=31536000, immutable" always;
+      add_header X-Content-Type-Options "nosniff" always;
+    }
+  }
+
+  # legacy admin (until P4 parity sign-off, then replace with redirect):
+  location = /admin { proxy_pass http://127.0.0.1:8000; }          # admin.html today
+  location = /admin/ { return 308 /admin; }
+
+  # --- Hugo site -----------------------------------------------------------
+  location / {
+    root /srv/partout/site;
+    try_files $uri $uri/ $uri/index.html =404;
+    error_page 404 /404.html;    # branded 404 shipped by hugo
+    location = /robots.txt { add_header X-Content-Type-Options "nosniff" always; }
+  }
+}
+
+server {
+  listen 80;
+  server_name partout.pro;
+  return 301 https://$host$request_uri;
+}
