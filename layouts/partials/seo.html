@@ -1,0 +1,13 @@
+{{- $desc := default .Site.Params.description .Description -}}
+{{- $title := cond .IsHome "PartOut — Parts are Everywhere" (printf "%s — PartOut" .Title) -}}
+<meta name="description" content="{{ $desc }}" />
+<meta property="og:site_name" content="PartOut" />
+<meta property="og:title" content="{{ $title }}" />
+<meta property="og:description" content="{{ $desc }}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ .Permalink }}" />
+<meta property="og:image" content="{{ "images/logo.png" | absURL }}" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="{{ $title }}" />
+<meta name="twitter:description" content="{{ $desc }}" />
+<link rel="canonical" href="{{ .Permalink }}" />

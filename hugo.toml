@@ -1,0 +1,29 @@
+baseURL = "https://partout.pro/"
+locale = "en-us"
+title = "PartOut"
+
+# Mirror the benthic.io pattern: no page uses tags or categories, so the empty
+# taxonomy indexes are disabled rather than published and sitemap-advertised.
+disableKinds = ["taxonomy", "term"]
+
+[params]
+  email = "brian@benthic.io"
+  description = "PartOut is a crowd-sourced parts database: verified fitment for your vehicle's exact configuration, built by the people who handle the parts. Parts are everywhere."
+
+[markup.highlight]
+  style = "dracula"
+  noClasses = false
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 10
+  [[menu.main]]
+    name = "How it works"
+    url = "/how-it-works/"
+    weight = 20
+  [[menu.main]]
+    name = "Get the app"
+    url = "/obtain/"
+    weight = 30
