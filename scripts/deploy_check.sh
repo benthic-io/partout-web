@@ -110,6 +110,8 @@ if [[ $site_live == 1 ]]; then
   hdr /admin Cache-Control 'no-store'
   hdr /admin Content-Security-Policy "default-src 'self'.*script-src 'self' 'unsafe-inline'.*object-src 'none'.*frame-ancestors 'none'"
   hdr /admin/ X-Robots-Tag 'noindex'
+  hdr /admin/ Cache-Control 'no-store'
+  hdr /admin/ Content-Security-Policy "default-src 'self'.*script-src 'self' 'unsafe-inline'.*object-src 'none'.*frame-ancestors 'none'"
 
   # sitemap must not advertise app/admin surfaces
   if curl -sS -m 20 "$SITE_URL/sitemap.xml" | grep -qE '/app/|/admin'; then

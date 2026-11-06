@@ -118,6 +118,17 @@ def main() -> int:
         # server-block baseline: includes common but must not need app
         # (nothing to assert beyond rule 3/4/5)
 
+    # rule 5b: CSP strings inside the snippet files are just as load-bearing
+    for sname, stext in snippet_texts.items():
+        for m in re.finditer(
+            r"add_header\s+Content-Security-Policy(?:-Report-Only)?\s+\"([^\"]+)\"",
+            stext,
+        ):
+            if "object-src 'none'" not in m.group(1):
+                violations.append(
+                    f"deploy/snippets/{sname}: CSP missing object-src 'none'"
+                )
+
     # rule 6: app snippet RO string vs any commented enforce twin
     app_snip = snippet_texts.get(Path(APP).name, "")
     ro = re.search(
