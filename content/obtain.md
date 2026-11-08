@@ -40,4 +40,4 @@ agreeing is what turns a candidate part number into published fact. The
 earlier the crowd, the faster your search for that one alternator gets
 answers.
 
-[← How it works](/how-it-works/)
+[← Home](/)
