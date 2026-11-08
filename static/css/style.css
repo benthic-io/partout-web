@@ -84,19 +84,19 @@ img {
 }
 
 .header .container {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 2rem;
 }
 
 .logo {
-  flex: 0 0 auto;
+  justify-self: start;
 }
 
 .logo img {
   display: block;
-  height: 80px;
+  height: 64px;
   width: auto;
   /* The app banner ships on a translucent black plate sized for the app's
      own surface; `lighten` drops the plate against the dark header without
@@ -105,7 +105,10 @@ img {
 }
 
 .nav {
-  margin-left: auto;
+  justify-self: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .nav ul {
@@ -120,7 +123,7 @@ img {
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
-  text-align: right;
+  text-align: center;
 }
 
 /* Main — one centered box holding the paragraph. ----------------------- */
@@ -291,26 +294,25 @@ img {
 
 @media (max-width: 768px) {
   .header .container {
-    flex-direction: row;
+    grid-template-columns: auto 1fr;
     gap: 0.75rem;
-    text-align: left;
   }
 
   .logo img {
-    height: 44px;
+    height: 36px;
   }
 
   .nav {
-    margin-left: auto;
+    justify-self: center;
   }
 
   .nav ul {
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .nav .status {
     font-size: 0.9rem;
-    text-align: right;
+    text-align: center;
   }
 
   .site-main {
