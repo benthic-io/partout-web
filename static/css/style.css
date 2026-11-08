@@ -84,14 +84,9 @@ img {
 }
 
 .header .container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 2rem;
-}
-
-.logo {
-  justify-self: start;
 }
 
 .logo img {
@@ -102,28 +97,6 @@ img {
      own surface; `lighten` drops the plate against the dark header without
      touching the synced asset (CI checks it byte-for-byte). */
   mix-blend-mode: lighten;
-}
-
-.nav {
-  justify-self: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.nav ul {
-  list-style: none;
-  display: flex;
-  margin: 0;
-  padding: 0;
-}
-
-.nav .status {
-  color: var(--accent);
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.5;
-  text-align: center;
 }
 
 /* Main — one centered box holding the paragraph. ----------------------- */
@@ -293,26 +266,8 @@ img {
 /* Responsive — mirrors benthic.io's 768px breakpoint. ----------------- */
 
 @media (max-width: 768px) {
-  .header .container {
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-  }
-
   .logo img {
     height: 36px;
-  }
-
-  .nav {
-    justify-self: center;
-  }
-
-  .nav ul {
-    justify-content: center;
-  }
-
-  .nav .status {
-    font-size: 0.9rem;
-    text-align: center;
   }
 
   .site-main {
