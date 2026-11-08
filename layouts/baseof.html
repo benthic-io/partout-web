@@ -10,16 +10,19 @@
     {{ partial "seo.html" . }}
   </head>
   <body>
-    <header class="site-header">
-      <div class="container header-row">
-        <a class="brand" href="{{ "/" | relURL }}" aria-label="PartOut home">
-          <img
-            src="{{ "images/banner.png" | relURL }}"
-            alt="PartOut"
-            width="401"
-            height="89"
-          />
-        </a>
+    <!-- Header mirrors benthic.io: logo left, secondary block right. -->
+    <header class="header">
+      <div class="container">
+        <div class="logo">
+          <a href="{{ "/" | relURL }}" aria-label="PartOut home">
+            <img
+              src="{{ "images/banner.png" | relURL }}"
+              alt="PartOut"
+              width="401"
+              height="89"
+            />
+          </a>
+        </div>
         <p class="tagline">
           Crowd-sourced parts matching and data generation, for the public good.
         </p>
@@ -27,12 +30,11 @@
     </header>
 
     <main class="site-main">
-      <div class="container">
-        {{ block "main" . }}{{ end }}
-      </div>
+      {{ block "main" . }}{{ end }}
     </main>
 
-    <footer class="site-footer">
+    <!-- Footer mirrors benthic.io's bar: definition, social icons, copyright. -->
+    <footer class="footer">
       <div class="container">
         <p class="definition">
           <strong>partout</strong>
@@ -40,7 +42,7 @@
           <em>adv.</em> — everywhere; all over; throughout.
         </p>
         <div class="footer-links">
-          <a href="mailto:{{ .Site.Params.email }}" aria-label="Email PartOut">
+          <a href="mailto:{{ .Site.Params.email }}" aria-label="Email">
             <svg
               viewBox="0 0 24 24"
               width="20"
@@ -54,7 +56,35 @@
               />
             </svg>
           </a>
-          <a href="https://github.com/benthic-io" aria-label="PartOut on GitHub">
+          <a href="{{ .Site.Params.x_link }}" aria-label="X">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 21.75H5.33z"
+              />
+            </svg>
+          </a>
+          <a href="{{ .Site.Params.facebook_link }}" aria-label="Facebook">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+              />
+            </svg>
+          </a>
+          <a href="https://github.com/benthic-io" aria-label="GitHub">
             <svg
               viewBox="0 0 24 24"
               width="20"

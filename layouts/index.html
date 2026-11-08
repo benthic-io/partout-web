@@ -1,12 +1,16 @@
 {{ define "main" }}
-<section class="manifesto">
-  <h1 class="visually-hidden">PartOut — Parts are Everywhere</h1>
-  <p class="status">
-    <span class="status-dot" aria-hidden="true"></span>
-    Under development
-  </p>
-  <div class="manifesto-body">
-    {{ .Content }}
+<section class="content centered-content">
+  <div class="container">
+    <div class="content-box">
+      <p class="status">
+        <span class="status-dot" aria-hidden="true"></span>
+        Under development
+      </p>
+      <h1 class="visually-hidden">PartOut — Parts are Everywhere</h1>
+      <div class="content-body">
+        {{ .Content }}
+      </div>
+    </div>
   </div>
 </section>
 {{ end }}

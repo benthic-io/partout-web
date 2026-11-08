@@ -8,6 +8,10 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   email = "brian@benthic.io"
+  x_handle = "@otherdrums"
+  x_link = "https://x.com/otherdrums"
+  facebook = "Brian Mulkern"
+  facebook_link = "https://www.facebook.com/brian.mulkern.5"
   description = "PartOut — crowd-sourced parts matching and data generation, for the public good."
 
 [markup.highlight]
