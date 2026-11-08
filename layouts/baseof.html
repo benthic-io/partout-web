@@ -23,15 +23,11 @@
             />
           </a>
         </div>
-        <div class="header-right">
-          <p class="status">
-            <span class="status-dot" aria-hidden="true"></span>
-            Under development
-          </p>
-          <p class="tagline">
-            Crowd-sourced parts matching and data generation, for the public good.
-          </p>
-        </div>
+        <nav class="nav" aria-label="Site status">
+          <ul>
+            <li><span class="status">Under development</span></li>
+          </ul>
+        </nav>
       </div>
     </header>
 
@@ -106,8 +102,10 @@
           </a>
         </div>
         <p class="copyright">
-          &copy; {{ now.Year }} PartOut — a benthic.io project. Made in Maine. 🦞
+          &copy; {{ now.Year }} PartOut — a Fox Gully Recycling &amp;
+          <a href="https://benthic.io">https://benthic.io</a> collaboration.
         </p>
+        <p class="made-in">Made in Maine.</p>
       </div>
     </footer>
   </body>
