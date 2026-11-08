@@ -89,6 +89,10 @@ img {
   align-items: center;
 }
 
+.logo {
+  margin: 0 auto;
+}
+
 .logo img {
   display: block;
   height: 64px;

@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ if .IsHome }}PartOut — Parts are Everywhere{{ else }}{{ .Title }} — PartOut{{ end }}</title>
-    <link rel="stylesheet" href="{{ "css/brand.css" | relURL }}" />
-    <link rel="stylesheet" href="{{ "css/style.css" | relURL }}" />
+    <link rel="stylesheet" href="{{ "css/brand.css" | relURL }}?v={{ .Site.Params.asset_version }}" />
+    <link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v={{ .Site.Params.asset_version }}" />
     <link rel="icon" href="{{ "favicon.png" | relURL }}" sizes="512x512" type="image/png" />
     {{ partial "seo.html" . }}
   </head>

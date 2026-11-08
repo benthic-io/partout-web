@@ -7,6 +7,7 @@ title = "PartOut"
 disableKinds = ["taxonomy", "term"]
 
 [params]
+  asset_version = "20261108"
   email = "brian@benthic.io"
   x_handle = "@otherdrums"
   x_link = "https://x.com/otherdrums"
