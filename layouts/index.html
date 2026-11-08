@@ -1,5 +1,12 @@
 {{ define "main" }}
-<article class="page">
-  {{ .Content }}
-</article>
+<section class="manifesto">
+  <h1 class="visually-hidden">PartOut — Parts are Everywhere</h1>
+  <p class="status">
+    <span class="status-dot" aria-hidden="true"></span>
+    Under development
+  </p>
+  <div class="manifesto-body">
+    {{ .Content }}
+  </div>
+</section>
 {{ end }}
