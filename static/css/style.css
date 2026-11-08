@@ -13,13 +13,11 @@
   --bg: var(--dark-background);
   --bg-deep: var(--dark-surface-lowest);
   --surface: var(--dark-surface);
-  --surface-raised: var(--dark-surface-container);
   --line: var(--dark-outline-variant);
   --text: var(--dark-on-surface);
   --muted: var(--dark-on-surface-variant);
   --accent: var(--lime);
   --accent-ink: var(--dark-on-primary);
-  --gold: var(--dark-tertiary);
 
   --container: 1400px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
