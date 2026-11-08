@@ -14,10 +14,6 @@ disableKinds = ["taxonomy", "term"]
   style = "dracula"
   noClasses = false
 
-[menu]
-  [[menu.main]]
-    name = "Home"
-    url = "/"
-    weight = 10
+# No menu items — single page site
 
 
